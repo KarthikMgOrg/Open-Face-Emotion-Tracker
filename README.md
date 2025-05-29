@@ -106,10 +106,3 @@ MIT License. Use freely and contribute back!
 
 Pull requests, ideas, and bug reports are welcome!
 If you’ve got a new way to engineer features or want to bring in another LLM provider—let’s collaborate!
-
-```
-
----
-
-Let me know if you'd like this saved as `README.md` in your repo or want badges/shields (e.g., build status, license, etc.) added.
-```
