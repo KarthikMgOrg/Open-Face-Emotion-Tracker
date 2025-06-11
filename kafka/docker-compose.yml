@@ -1,0 +1,65 @@
+version: "3.8"
+
+services:
+  
+  zookeeper:
+   image: bitnami/zookeeper:latest
+   environment:
+    - ALLOW_ANONYMOUS_LOGIN=yes
+   ports:
+    - "2181:2181"
+  
+  kafka:
+   image: bitnami/kafka:3.4.0
+   depends_on:
+    - zookeeper
+   environment:
+    - KAFKA_ENABLE_KRAFT=no
+    - KAFKA_BROKER_ID=1
+    - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+    - KAFKA_CFG_LISTENERS=PLAINTEXT://kafka:9092
+    - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+    - ALLOW_PLAINTEXT_LISTENER=yes
+    - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT
+    - BITNAMI_DEBUG=yes
+   ports:
+    - "9092:9092"
+  
+  producer:
+    build:
+      context: ./producer
+      dockerfile: ../app.Dockerfile
+    depends_on:
+     - kafka
+     - feature_extractor
+    # volumes:
+      # - ./wait-for-it.sh:/wait-for-it.sh
+    # command: ["./wait-for-it.sh", "kafka:9092", "--timeout=60", "--strict", "--", "python", "run_feature_extraction.py"]
+    environment:
+      - PYTHONUNBUFFERED=1
+  
+  consumer:
+   build:
+     context: ./consumer
+     dockerfile: ../app.Dockerfile
+   depends_on:
+    - kafka
+    - feature_extractor
+   environment:
+      - PYTHONUNBUFFERED=1
+
+  feature_extractor:
+    build:
+      context: ../feature_extractor
+    volumes:
+      - ./feature_extractor:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    devices:
+      - "/dev/video0:/dev/video0"
+    depends_on:
+      - kafka
+
+networks:
+  default:
+   name: kafka-net
